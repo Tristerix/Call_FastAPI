@@ -1,0 +1,48 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import google.generativeai as genai
+import json
+import os
+
+app = FastAPI()
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+class GeminiResponse(BaseModel):
+    title: str
+    score: int
+    tags: list[str]
+
+@app.get("/review")
+async def review():
+
+    prompt = """
+    以下の形式のJSONのみを出力してください。
+    説明文は禁止。
+
+    {
+      "title": "string",
+      "score": number,
+      "tags": ["string"]
+    }
+
+    アニメ「鬼滅の刃」を評価してください。
+    """
+
+    try:
+        response = model.generate_content(
+            prompt,
+            generation_config={
+                "response_mime_type": "application/json"
+            }
+        )
+
+        raw_text = response.text.strip()
+        data = json.loads(raw_text)
+        validated = GeminiResponse(**data)
+
+        return validated
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
