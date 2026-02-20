@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 # --------------------
-# Gemini API İ’èi’†g‚Í‚¢‚¶‚ç‚È‚¢j
+# Gemini API è¨­å®šï¼ˆä¸­èº«ã¯ã„ã˜ã‚‰ãªã„ï¼‰
 # --------------------
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -60,18 +60,18 @@ def chat(data: UnityRequest):
 
     if not GEMINI_API_KEY:
         return UnityResponse(
-            message="APIƒL[–¢İ’è",
+            message="APIã‚­ãƒ¼æœªè¨­å®š",
             emotion=Emotion(joy=0.0, anger=0.0, sadness=0.0, fun=0.0),
         )
 
     full_prompt = f"""
 {data.basePrompt}
 
-ƒ†[ƒU[“ü—Í:
+ãƒ¦ãƒ¼ã‚¶ãƒ¼å…¥åŠ›:
 {data.text}
 
-•K‚¸ˆÈ‰º‚Ì JSON ƒtƒH[ƒ}ƒbƒg‚Ì‚İ‚Å‰“š‚µ‚Ä‚­‚¾‚³‚¢B
-”’l‚Í 0.0 ` 1.0 ‚Ì”ÍˆÍ‚Åw’è‚µ‚Ä‚­‚¾‚³‚¢B
+å¿…ãšä»¥ä¸‹ã® JSON ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã®ã¿ã§å¿œç­”ã—ã¦ãã ã•ã„ã€‚
+æ•°å€¤ã¯ 0.0 ï½ 1.0 ã®ç¯„å›²ã§æŒ‡å®šã—ã¦ãã ã•ã„ã€‚
 
 {{
   "message": "string",
@@ -98,7 +98,7 @@ def chat(data: UnityRequest):
         resp = requests.post(
             GEMINI_URL,
             json=payload,
-            timeout=20  # FreeŠÂ‹«‘Îôi­‚µ’Z‚ßj
+            timeout=20  # Freeç’°å¢ƒå¯¾ç­–ï¼ˆå°‘ã—çŸ­ã‚ï¼‰
         )
         resp.raise_for_status()
 
@@ -128,12 +128,12 @@ def chat(data: UnityRequest):
     except Exception:
         logger.exception("Error during /chat")
         return UnityResponse(
-            message="ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½",
+            message="ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸ",
             emotion=Emotion(joy=0.0, anger=0.0, sadness=0.0, fun=0.0),
         )
 
 # --------------------
-# UptimeRobot—pƒwƒ‹ƒXƒ`ƒFƒbƒN
+# UptimeRobotç”¨ãƒ˜ãƒ«ã‚¹ãƒã‚§ãƒƒã‚¯
 # --------------------
 @app.get("/ping")
 def ping():
