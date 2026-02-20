@@ -154,6 +154,6 @@ def chat(data: UnityRequest):
 # --------------------
 # health check (UptimeRobot 用)
 # --------------------
-@app.get("/ping")
-def ping():
+@app.api_route("/ping", methods=["GET", "HEAD"])
+def ping(request: Request):
     return {"status": "ok"}
