@@ -1,4 +1,3 @@
-# main.py
 import os
 import re
 import json
@@ -8,21 +7,13 @@ import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
-# --------------------
-# logging
-# --------------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("fastapi_app")
 
-# --------------------
-# FastAPI app
-# --------------------
 app = FastAPI()
 
-# --------------------
-# CORS (Unity / local dev ç”¨)
-# --------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,20 +23,20 @@ app.add_middleware(
 )
 
 # --------------------
-# Gemini API è¨­å®š
+# Gemini API İ’èi’†g‚Í‚¢‚¶‚ç‚È‚¢j
 # --------------------
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
 if not GEMINI_API_KEY:
-    logger.error("GEMINI_API_KEY is not set")
-    raise RuntimeError("GEMINI_API_KEY is not set")
+    logger.warning("GEMINI_API_KEY is not set")
 
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1/models/"
-    "gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY
+    "gemini-2.5-flash:generateContent?key=" + str(GEMINI_API_KEY)
 )
 
 # --------------------
-# request / response models
+# Models
 # --------------------
 class UnityRequest(BaseModel):
     text: str
@@ -62,18 +53,25 @@ class UnityResponse(BaseModel):
     emotion: Emotion
 
 # --------------------
-# main API
+# Chat
 # --------------------
 @app.post("/chat", response_model=UnityResponse)
 def chat(data: UnityRequest):
+
+    if not GEMINI_API_KEY:
+        return UnityResponse(
+            message="APIƒL[–¢İ’è",
+            emotion=Emotion(joy=0.0, anger=0.0, sadness=0.0, fun=0.0),
+        )
+
     full_prompt = f"""
 {data.basePrompt}
 
-ãƒ¦ãƒ¼ã‚¶ãƒ¼å…¥åŠ›:
+ƒ†[ƒU[“ü—Í:
 {data.text}
 
-å¿…ãšä»¥ä¸‹ã® JSON ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã®ã¿ã§å¿œç­”ã—ã¦ãã ã•ã„ã€‚
-æ•°å€¤ã¯ 0.0 ï½ 1.0 ã®ç¯„å›²ã§æŒ‡å®šã—ã¦ãã ã•ã„ã€‚
+•K‚¸ˆÈ‰º‚Ì JSON ƒtƒH[ƒ}ƒbƒg‚Ì‚İ‚Å‰“š‚µ‚Ä‚­‚¾‚³‚¢B
+”’l‚Í 0.0 ` 1.0 ‚Ì”ÍˆÍ‚Åw’è‚µ‚Ä‚­‚¾‚³‚¢B
 
 {{
   "message": "string",
@@ -100,30 +98,18 @@ def chat(data: UnityRequest):
         resp = requests.post(
             GEMINI_URL,
             json=payload,
-            timeout=30
+            timeout=20  # FreeŠÂ‹«‘Îôi­‚µ’Z‚ßj
         )
         resp.raise_for_status()
 
         gemini_json = resp.json()
-
-        if "candidates" not in gemini_json or not gemini_json["candidates"]:
-            raise ValueError("No candidates in Gemini response")
-
         raw_text = gemini_json["candidates"][0]["content"]["parts"][0].get("text", "")
+
         if not raw_text:
-            raise ValueError("Empty text from Gemini")
+            raise ValueError("Empty text")
 
-        # JSON æŠ½å‡ºï¼ˆãƒã‚¹ãƒˆå¯¾å¿œï¼‰
-        m = re.search(
-            r"\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}",
-            raw_text,
-            re.DOTALL
-        )
+        m = re.search(r"\{.*\}", raw_text, re.DOTALL)
         if not m:
-            m = re.search(r"\{.*\}", raw_text, re.DOTALL)
-
-        if not m:
-            logger.error("JSON not found in Gemini response:\n%s", raw_text)
             raise ValueError("JSON not found")
 
         parsed = json.loads(m.group())
@@ -139,21 +125,16 @@ def chat(data: UnityRequest):
             ),
         )
 
-    except Exception as e:
-        logger.exception("Error during /chat: %s", e)
+    except Exception:
+        logger.exception("Error during /chat")
         return UnityResponse(
-            message="ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸ",
-            emotion=Emotion(
-                joy=0.0,
-                anger=0.0,
-                sadness=0.0,
-                fun=0.0,
-            ),
+            message="ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½",
+            emotion=Emotion(joy=0.0, anger=0.0, sadness=0.0, fun=0.0),
         )
 
 # --------------------
-# health check (UptimeRobot ç”¨)
+# UptimeRobot—pƒwƒ‹ƒXƒ`ƒFƒbƒN
 # --------------------
 @app.get("/ping")
 def ping():
-    return {"status": "ok"}
+    return JSONResponse(content={"status": "ok"}, status_code=200)
