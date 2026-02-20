@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
+from fastapi import Response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("fastapi_app")
@@ -133,8 +134,7 @@ def chat(data: UnityRequest):
         )
 
 # --------------------
-# UptimeRobot用ヘルスチェック
-# --------------------
-@app.get("/ping")
-def ping():
-    return JSONResponse(content={"status": "ok"}, status_code=200)
+
+@app.head("/ping")
+def ping_head():
+    return Response(status_code=200)
